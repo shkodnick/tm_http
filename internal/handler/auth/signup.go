@@ -3,25 +3,38 @@ package auth
 import (
 	"net/http"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 
-	"app/internal/store"
-	"app/internal/jwt"
+
+	"app/internal/core/profile"
+	"app/internal/handler/auth/jwt"
 	"app/internal/models"
 )
 
-func SignupHandler(c echo.Context) error {
+type RegisterHandler struct {
+	ProfileSrv   *profile.ProfileService
+}
+
+func NewProfileHandler(ProfileSrv *profile.ProfileService) RegisterHandler {
+	return RegisterHandler{
+		ProfileSrv:   ProfileSrv,
+	}
+}
+
+func (h *RegisterHandler) SignUpHandler(c echo.Context) error {
 	return c.Render(http.StatusOK, "signup.html", nil)
 }
 
-func SignUp(c echo.Context) error {
+func (h *RegisterHandler) SignUp(c echo.Context) error {
 	email := c.FormValue("email")
 	password := c.FormValue("password")
 	password2 := c.FormValue("password2")
 
+	if password != password2 {
+		return c.JSON(http.StatusInternalServerError, "Пароли не совподают")
+	}
 
-	exists, err := store.UserExists(email)
+	exists, err := h.ProfileSrv.UserExists(email)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "Ошибка проверки пользователя")
 	}
@@ -34,7 +47,7 @@ func SignUp(c echo.Context) error {
 		Password: password,
 	}
 
-	err = store.CreateUser(user)
+	err = h.ProfileSrv.CreateUser(user)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "Ошибка при создании пользователя")
 	}

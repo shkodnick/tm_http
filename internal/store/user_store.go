@@ -28,7 +28,7 @@ func (s *Store) UserExists(email string) (bool, error) {
 	return exists, nil
 }
 
-func CreateUser(s *Store, user *models.SignUpParams) error {
+func (s *Store) CreateUser(user *models.SignUpParams) error {
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {

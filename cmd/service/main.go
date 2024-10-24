@@ -13,7 +13,9 @@ func main() {
 
 	e.Renderer = renderer.NewRenderer("templates/*.html")
 
-	router.RegisterRoutes(e)
+	if err := router.RegisterRoutes(e); err != nil {
+		e.Logger.Fatal(err)
+	}
 	fmt.Println("localhost:8080")
 	e.Logger.Fatal(e.Start(":8080"))
 }

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -27,21 +28,28 @@ type Database struct {
 	Pass     string `json:"pass" env:"POSTGRES_PASSWORD"`
 }
 
-func CreateConfig() (*Config, error) {
+func NewConfig() (*Config, error) {
+	var config Config
+	if err := config.readConfig(); err != nil {
+		return nil, err
+	}
+
+	return &config, nil
+}
+
+func (config *Config) readConfig() error {
 	configPath := os.Getenv("CONFIG_PATH")
 	if strings.TrimSpace(configPath) == "" {
-		return nil, errors.New("CONFIG_PATH is not set")
+		return errors.New("CONFIG_PATH is not set")
 	}
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		return nil, errors.Errorf("config file does not exist - `%s`", configPath)
+		return errors.New(fmt.Sprintf("config file does not exist - `%s`", configPath))
 	}
 
-	var cfg Config
-
-	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
-		return nil, errors.Wrap(err, "cannot read config")
+	err := cleanenv.ReadConfig(configPath, config)
+	if err != nil {
+		return err
 	}
-
-	return &cfg, nil
+	return nil
 }
